@@ -7,6 +7,12 @@ SECS = $10
 MINS = $11
 HOURS = $12
 
+SEC_POS = $86
+MIN_POS = $83
+HOUR_POS = $80
+SEP_POS_1 = $82
+SEP_POS_2 = $85
+
 E  = %10000000
 RW = %01000000
 RS = %00100000
@@ -41,34 +47,59 @@ reset:
   lda #23
   sta HOURS
  
-write_message:
-  lda #%10000000 ; Set LCD address to first character on screen
+  lda #SEP_POS_1
   jsr lcd_instruction
-
-  clc
-  lda HOURS
-  adc HOURS
-  tax
-  lda numbers,x
-  jsr write_char
-  inx
-  lda numbers,x
-  jsr write_char
-   
   lda #":"
   jsr write_char
 
+  lda #SEP_POS_2
+  jsr lcd_instruction
+  lda #":"
+  jsr write_char
+
+  jsr write_secs
+  jsr write_mins
+  jsr write_hours
+
+main_loop:
+  inc SECS
+  lda SECS
+  cmp #60
+  beq reset_secs
+
+  jsr write_secs
+  bra main_loop
+
+reset_secs:
+  stz SECS
+  jsr write_secs
+  inc MINS
   lda MINS
-  adc MINS
-  tax
-  lda numbers,x
-  jsr write_char
-  inx
-  lda numbers,x
-  jsr write_char
+  cmp #60
+  beq reset_mins
 
-  lda #":"
-  jsr write_char
+  jsr write_mins
+  bra main_loop
+
+reset_mins:
+  stz MINS
+  jsr write_mins
+  inc HOURS
+  lda HOURS
+  cmp #24
+  beq reset_hours
+
+  jsr write_hours
+  bra main_loop
+
+reset_hours:
+  stz HOURS
+  jsr write_hours
+  bra main_loop
+
+write_secs:
+  lda #SEC_POS
+  jsr lcd_instruction
 
   lda SECS
   adc SECS
@@ -78,26 +109,35 @@ write_message:
   inx
   lda numbers,x
   jsr write_char
+  rts
 
-  inc SECS
-  lda SECS
-  cmp #60
-  bne write_message
+write_mins:
+  lda #MIN_POS
+  jsr lcd_instruction
 
-  stz SECS
-  inc MINS
   lda MINS
-  cmp #60
-  bne write_message
+  adc MINS
+  tax
+  lda numbers,x
+  jsr write_char
+  inx
+  lda numbers,x
+  jsr write_char
+  rts
 
-  stz MINS
-  inc HOURS
+write_hours:
+  lda #HOUR_POS
+  jsr lcd_instruction
+
   lda HOURS
-  cmp #24
-  bne write_message
-
-  stz HOURS
-  bra write_message
+  adc HOURS
+  tax
+  lda numbers,x
+  jsr write_char
+  inx
+  lda numbers,x
+  jsr write_char
+  rts
 
 lcd_instruction:
   sta PORTB
