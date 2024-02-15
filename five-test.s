@@ -31,16 +31,10 @@ reset:
 
   lda #%01000000 ; Set LCD address to start of CGRAM (first custom character)
   jsr lcd_instruction
-
-  ldx #0
-five_loop:
-  lda five,x
-  jsr write_char
-  inx
-  cpx #31
-  beq write_message 
-  bra five_loop
+  jsr write_one_to_cgram
   
+  jsr write_zero_to_cgram
+
 write_message:
   lda #%10000000 ; Set LCD address to first character on screen
   jsr lcd_instruction
@@ -51,10 +45,10 @@ write_message:
   lda #$01
   jsr write_char
 
-  lda #$00
+  lda #$04
   jsr write_char
 
-  lda #$01
+  lda #$05
   jsr write_char
 
   lda #%10100001 ; Maru
@@ -69,14 +63,18 @@ write_message:
   lda #$03
   jsr write_char
 
-  lda #$02
+  lda #$06
   jsr write_char
 
-  lda #$03
+  lda #$07
   jsr write_char
 
   lda #%10100001 ; Maru
   jsr write_char
+
+  lda #%01000000 ; Set LCD address to start of CGRAM (first custom character)
+  jsr lcd_instruction
+  jsr write_five_to_cgram
 
   lda #%10000101 ; Set LCD address to 6th character on screen
   jsr lcd_instruction
@@ -164,6 +162,110 @@ write_char:
   lda #RS         ; Clear E bits
   sta PORTA
   rts
+
+write_zero_to_cgram: ; Clobbers A,X
+  ldx #0
+zero_loop:
+  lda zero,x
+  jsr write_char
+  inx
+  cpx #32
+  bne zero_loop
+  rts
+
+write_one_to_cgram: ; Clobbers A,X
+  ldx #0
+one_loop:
+  lda one,x
+  jsr write_char
+  inx
+  cpx #32
+  bne one_loop
+  rts
+
+write_five_to_cgram: ; Clobbers A,X
+  ldx #0
+five_loop:
+  lda five,x
+  jsr write_char
+  inx
+  cpx #32
+  bne five_loop
+  rts
+
+zero:
+  .byte %00000011
+  .byte %00000111
+  .byte %00001111
+  .byte %00001110
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+
+  .byte %00011000
+  .byte %00011100
+  .byte %00011110
+  .byte %00001110
+  .byte %00000111
+  .byte %00000111
+  .byte %00000111
+  .byte %00000111
+
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00001110
+  .byte %00001111
+  .byte %00000111
+  .byte %00000011
+
+  .byte %00000111
+  .byte %00000111
+  .byte %00000111
+  .byte %00000111
+  .byte %00001110
+  .byte %00011110
+  .byte %00011100
+  .byte %00011000
+
+one:
+  .byte %00000001
+  .byte %00000011
+  .byte %00000111
+  .byte %00001110
+  .byte %00000000
+  .byte %00000000
+  .byte %00000000
+  .byte %00000000
+
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+
+  .byte %00000000
+  .byte %00000000
+  .byte %00000000
+  .byte %00000000
+  .byte %00000000
+  .byte %00000000
+  .byte %00000000
+  .byte %00000111
+
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011100
+  .byte %00011111
 
 five:
   .byte %00001111
