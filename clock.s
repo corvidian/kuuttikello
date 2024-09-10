@@ -13,6 +13,9 @@ HOUR_POS = $80
 SEP_POS_1 = $82
 SEP_POS_2 = $85
 
+KUUT_POS_1 = $88
+KUUT_POS_2 = $C8
+
 E  = %10000000
 RW = %01000000
 RS = %00100000
@@ -28,7 +31,7 @@ reset:
   lda #%00111000 ; Set 8-bit mode ; 2-line display ; 5x8 font 
   jsr lcd_instruction
 
-  lda #%00001110 ; Display on ; cursor on ; blink off 
+  lda #%00001100 ; Display on ; cursor off ; blink off
   jsr lcd_instruction
 
   lda #%00000110 ; Increment ; No shift
@@ -47,21 +50,34 @@ reset:
   lda #23
   sta HOURS
  
-  lda #SEP_POS_1
+  jsr write_hours_mins_secs
+
+  lda #KUUT_POS_1
   jsr lcd_instruction
-  lda #":"
+
+  lda #$00
+  jsr write_char
+  lda #$01
+  jsr write_char
+  lda #$02
+  jsr write_char
+  lda #$03
   jsr write_char
 
-  lda #SEP_POS_2
+  lda #KUUT_POS_2
   jsr lcd_instruction
-  lda #":"
-  jsr write_char
 
-  jsr write_secs
-  jsr write_mins
-  jsr write_hours
+  lda #$04
+  jsr write_char
+  lda #$05
+  jsr write_char
+  lda #$06
+  jsr write_char
+  lda #$07
+  jsr write_char
 
 main_loop:
+  clc
   inc SECS
   lda SECS
   cmp #60
@@ -72,29 +88,33 @@ main_loop:
 
 reset_secs:
   stz SECS
-  jsr write_secs
   inc MINS
   lda MINS
   cmp #60
   beq reset_mins
 
-  jsr write_mins
+  lsr a
+  bcc perus
+  jsr draw_kaanteiskuutti
+  bra cont
+perus:
+  jsr draw_peruskuutti
+
+cont:
+  clc
+  jsr write_mins_secs
   bra main_loop
 
 reset_mins:
   stz MINS
-  jsr write_mins
   inc HOURS
   lda HOURS
   cmp #24
-  beq reset_hours
-
-  jsr write_hours
-  bra main_loop
-
-reset_hours:
+  bne keep_hours
   stz HOURS
-  jsr write_hours
+
+keep_hours:
+  jsr write_hours_mins_secs
   bra main_loop
 
 write_secs:
@@ -102,6 +122,7 @@ write_secs:
   jsr lcd_instruction
 
   lda SECS
+  clc
   adc SECS
   tax
   lda numbers,x
@@ -111,12 +132,26 @@ write_secs:
   jsr write_char
   rts
 
-write_mins:
+write_mins_secs:
   lda #MIN_POS
   jsr lcd_instruction
 
   lda MINS
+  clc
   adc MINS
+  tax
+  lda numbers,x
+  jsr write_char
+  inx
+  lda numbers,x
+  jsr write_char
+
+  lda #":"
+  jsr write_char
+
+  lda SECS
+  clc
+  adc SECS
   tax
   lda numbers,x
   jsr write_char
@@ -125,12 +160,39 @@ write_mins:
   jsr write_char
   rts
 
-write_hours:
+write_hours_mins_secs:
   lda #HOUR_POS
   jsr lcd_instruction
 
   lda HOURS
+  clc
   adc HOURS
+  tax
+  lda numbers,x
+  jsr write_char
+  inx
+  lda numbers,x
+  jsr write_char
+
+  lda #":"
+  jsr write_char
+
+  lda MINS
+  clc
+  adc MINS
+  tax
+  lda numbers,x
+  jsr write_char
+  inx
+  lda numbers,x
+  jsr write_char
+
+  lda #":"
+  jsr write_char
+
+  lda SECS
+  clc
+  adc SECS
   tax
   lda numbers,x
   jsr write_char
@@ -157,6 +219,35 @@ write_char:
   sta PORTA
   rts
 
+draw_peruskuutti:
+  lda #%01000000 ; Set LCD address to start of CGRAM (first custom character)
+  jsr lcd_instruction
+
+  ldx #0
+:
+  lda peruskuutti,x
+  jsr write_char
+  inx
+  cpx #64
+  bne :-
+
+  rts
+
+draw_kaanteiskuutti:
+  lda #%01000000 ; Set LCD address to start of CGRAM (first custom character)
+  jsr lcd_instruction
+
+  ldx #0
+:
+  lda kaanteiskuutti,x
+  eor #$ff
+  jsr write_char
+  inx
+  cpx #64
+  bne :-
+
+  rts
+
 numbers:
   .byte "00","01","02","03","04","05","06","07","08","09"
   .byte "10","11","12","13","14","15","16","17","18","19"
@@ -173,6 +264,152 @@ numbers:
   .byte "C0","C1","C2","C3","C4","C5","C6","C7","C8","C9"
   .byte "D0","D1","D2","D3","D4","D5","D6","D7","D8","D9"
   .byte "F0","F1","F2","F3","F4","F5","F6","F7","F8","F9"
+
+peruskuutti:
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %00001
+  .byte %00011
+  .byte %00110
+  .byte %00100
+  .byte %01000
+
+  .byte %00000
+  .byte %00000
+  .byte %11111
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %01000
+  .byte %00000
+
+  .byte %00000
+  .byte %00000
+  .byte %11111
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %00010
+  .byte %00000
+
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %10000
+  .byte %11000
+  .byte %01100
+  .byte %00100
+  .byte %00010
+
+  .byte %01000
+  .byte %01011
+  .byte %01000
+  .byte %01011
+  .byte %11000
+  .byte %10100
+  .byte %10011
+  .byte %01110
+
+  .byte %01100
+  .byte %01100
+  .byte %00001
+  .byte %00101
+  .byte %00011
+  .byte %00000
+  .byte %00000
+  .byte %11111
+
+  .byte %00110
+  .byte %00110
+  .byte %10000
+  .byte %10100
+  .byte %11000
+  .byte %00000
+  .byte %00000
+  .byte %11111
+
+  .byte %00010
+  .byte %11010
+  .byte %00010
+  .byte %11010
+  .byte %00011
+  .byte %00101
+  .byte %11001
+  .byte %01110
+
+kaanteiskuutti:
+  .byte %11111
+  .byte %11111
+  .byte %11111
+  .byte %11111
+  .byte %11110
+  .byte %11100
+  .byte %11100
+  .byte %11000
+
+  .byte %11111
+  .byte %11111
+  .byte %11111
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %01000
+  .byte %00000
+
+  .byte %11111
+  .byte %11111
+  .byte %11111
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %00010
+  .byte %00000
+
+  .byte %11111
+  .byte %11111
+  .byte %11111
+  .byte %11111
+  .byte %01111
+  .byte %00111
+  .byte %00111
+  .byte %00011
+
+  .byte %11000
+  .byte %11011
+  .byte %11000
+  .byte %11011
+  .byte %11000
+  .byte %00100
+  .byte %00011
+  .byte %10011
+
+  .byte %01100
+  .byte %01100
+  .byte %00001
+  .byte %00101
+  .byte %00011
+  .byte %00000
+  .byte %00000
+  .byte %11111
+
+  .byte %00110
+  .byte %00110
+  .byte %10000
+  .byte %10100
+  .byte %11000
+  .byte %00000
+  .byte %00000
+  .byte %11111
+
+  .byte %00011
+  .byte %11011
+  .byte %00011
+  .byte %11011
+  .byte %00011
+  .byte %00101
+  .byte %11001
+  .byte %11111
 
   .org $fffc
   .word reset

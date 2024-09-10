@@ -27,15 +27,6 @@ reset:
   lda #%00000001 ; Clear screen 
   jsr lcd_instruction
 
-  ldx #$ff
-xloop:
-  ldy #$ff
-yloop:
-  dey
-  bne yloop
-  dex
-  bne xloop
-
 ; Write the message
 
   lda #"H"
@@ -77,28 +68,15 @@ yloop:
   lda #"!"
   jsr write_char
 
-;  lda #%11001111 ; Set cursor to low-right corner
-;  jsr lcs_instruction
-
-  lda #%00000111 ; Increment ; With shift
-  jsr lcd_instruction
-
-  ldx #$ff
+  stp
 
 :
   jmp :-
- 
-loop:
-  inx
-  stx PORTB 
-  lda #RS        ; Set RS; Clear RW/E bits
-  sta PORTA
-  lda #(RS | E)  ; Set E bit to send instruction
-  sta PORTA
-  lda #RS        ; Clear E bit
-  sta PORTA
 
-  jmp loop
+lcd_wait:
+  lda #RW
+  sta PORTA
+   
 
 lcd_instruction:
   sta PORTB
