@@ -107,10 +107,10 @@ reset_secs:
 
   lsr a
   bcc perus
-  jsr draw_kaanteiskuutti
+  jsr draw_hymykuutti
   bra cont
 perus:
-  jsr draw_peruskuutti
+  jsr draw_unikuutti
 
 cont:
   clc
@@ -280,6 +280,71 @@ draw_kaanteiskuutti:
 
   rts
 
+draw_hymykuutti:
+  lda #KUUT_POS_1
+  jsr lcd_instruction
+
+  ldx #0
+:
+  lda hymykuutti_string1,x
+  jsr write_char
+  bne :-
+
+  lda #KUUT_POS_2
+  jsr lcd_instruction
+
+  ldx #0
+:
+  lda hymykuutti_string2,x
+  jsr write_char
+  bne :-
+
+  lda #%01000000 ; Set LCD address to start of CGRAM (first custom character)
+  jsr lcd_instruction
+
+  ldx #0
+:
+  lda hymykuutti,x
+  jsr write_char
+  inx
+  cpx #64
+  bne :-
+
+  rts
+
+draw_unikuutti:
+  lda #KUUT_POS_1
+  jsr lcd_instruction
+
+  ldx #0
+:
+  lda unikuutti_string1,x
+  jsr write_char
+  bne :-
+
+  lda #KUUT_POS_2
+  jsr lcd_instruction
+
+  ldx #0
+:
+  lda unikuutti_string2,x
+  jsr write_char
+  bne :-
+
+  lda #%01000000 ; Set LCD address to start of CGRAM (first custom character)
+  jsr lcd_instruction
+
+  ldx #0
+:
+  lda unikuutti,x
+  jsr write_char
+  inx
+  cpx #64
+  bne :-
+
+  rts
+
+
 numbers:
   .byte "00","01","02","03","04","05","06","07","08","09"
   .byte "10","11","12","13","14","15","16","17","18","19"
@@ -353,6 +418,158 @@ peruskuutti:
   .byte %11111
 
   .byte %00110
+  .byte %00110
+  .byte %10000
+  .byte %10100
+  .byte %11000
+  .byte %00000
+  .byte %00000
+  .byte %11111
+
+  .byte %00010
+  .byte %11010
+  .byte %00010
+  .byte %11010
+  .byte %00011
+  .byte %00101
+  .byte %11001
+  .byte %01110
+
+hymykuutti_string1: .byte $a1, $eb, 08, 09, 10, 11, $eb, $a1, 0
+hymykuutti_string2: .byte " ", " ", 12, 13, 14, 15, " ", " ", 0
+
+hymykuutti:
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %00001
+  .byte %00011
+  .byte %00110
+  .byte %00100
+  .byte %01000
+
+  .byte %00000
+  .byte %00000
+  .byte %11111
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %01000
+  .byte %00000
+
+  .byte %00000
+  .byte %00000
+  .byte %11111
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %00010
+  .byte %00000
+
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %10000
+  .byte %11000
+  .byte %01100
+  .byte %00100
+  .byte %00010
+
+  .byte %01000
+  .byte %01011
+  .byte %01000
+  .byte %01011
+  .byte %11000
+  .byte %10100
+  .byte %10011
+  .byte %01110
+
+  .byte %01000
+  .byte %10100
+  .byte %00001
+  .byte %00101
+  .byte %00011
+  .byte %00000
+  .byte %00000
+  .byte %11111
+
+  .byte %00010
+  .byte %00101
+  .byte %10000
+  .byte %10100
+  .byte %11000
+  .byte %00000
+  .byte %00000
+  .byte %11111
+
+  .byte %00010
+  .byte %11010
+  .byte %00010
+  .byte %11010
+  .byte %00011
+  .byte %00101
+  .byte %11001
+  .byte %01110
+
+unikuutti_string1: .byte 08, 09, 10, 11, "Z", "z", "Z", "z", 0
+unikuutti_string2: .byte 12, 13, 14, 15, " ", " ", " ", " ", 0
+
+unikuutti:
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %00001
+  .byte %00011
+  .byte %00110
+  .byte %00100
+  .byte %01000
+
+  .byte %00000
+  .byte %00000
+  .byte %11111
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %01000
+  .byte %00000
+
+  .byte %00000
+  .byte %00000
+  .byte %11111
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %00010
+  .byte %00000
+
+  .byte %00000
+  .byte %00000
+  .byte %00000
+  .byte %10000
+  .byte %11000
+  .byte %01100
+  .byte %00100
+  .byte %00010
+
+  .byte %01000
+  .byte %01011
+  .byte %01000
+  .byte %01011
+  .byte %11000
+  .byte %10100
+  .byte %10011
+  .byte %01110
+
+  .byte %00000
+  .byte %01100
+  .byte %00001
+  .byte %00101
+  .byte %00011
+  .byte %00000
+  .byte %00000
+  .byte %11111
+
+  .byte %00000
   .byte %00110
   .byte %10000
   .byte %10100
