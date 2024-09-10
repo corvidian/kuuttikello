@@ -27,58 +27,39 @@ reset:
   lda #%00000001 ; Clear screen 
   jsr lcd_instruction
 
-; Write the message
-
-  lda #"H"
+  ldx #0
+print:
+  lda message,x
+  beq loop
   jsr write_char
+  inx
+  jmp print
 
-  lda #"e"
-  jsr write_char
+loop:
+  jmp loop
 
-  lda #"l"
-  jsr write_char
-
-  lda #"l"
-  jsr write_char
-
-  lda #"o"
-  jsr write_char
-
-  lda #","
-  jsr write_char
-
-  lda #" "
-  jsr write_char
-
-  lda #"w"
-  jsr write_char
-
-  lda #"o"
-  jsr write_char
-
-  lda #"r"
-  jsr write_char
-
-  lda #"l"
-  jsr write_char
-
-  lda #"d"
-  jsr write_char
-
-  lda #"!"
-  jsr write_char
-
-  stp
-
-:
-  jmp :-
+message: .asciiz "Hello, world!"
 
 lcd_wait:
-  lda #RW
+  pha
+  stz DDRB       ; Port B is input
+lcd_busy:
+  lda #RW        ; Set RW bit
   sta PORTA
-   
+  lda #(RW | E)  ; Set Enable to send instruction
+  sta PORTA
+  lda PORTB      ; Read the result from the data lines
+  bmi lcd_busy   ; Branch if top bit is set
+
+  lda #RW        ; Clear Enable bit
+  sta PORTA
+  lda #%11111111 ; Port B is output
+  sta DDRB
+  pla
+  rts
 
 lcd_instruction:
+  jsr lcd_wait
   sta PORTB
   stz PORTA         ; Clear RS/RW/E bits
   lda #E            ; Set E bit to send instruction
@@ -87,6 +68,7 @@ lcd_instruction:
   rts
 
 write_char:
+  jsr lcd_wait
   sta PORTB
   lda #RS         ; Set RS; Clear RW/E bits
   sta PORTA
@@ -94,11 +76,6 @@ write_char:
   sta PORTA
   lda #RS         ; Clear E bits
   sta PORTA
-  nop
-  nop
-  nop
-  nop
-  nop
   rts
 
   .org $fffc
