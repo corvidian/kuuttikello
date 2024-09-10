@@ -85,16 +85,17 @@ main_loop:
 
   jsr write_secs
 
-  ldx #255
+; Viivettä, ettei sekunnit vilise
+  ldx #128
 xloop:
-  ldy #255
+  ldy #128
 yloop:
   dey
   bne yloop
 
   dex
   bne xloop
-
+; Viive ohi
 
   bra main_loop
 
