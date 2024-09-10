@@ -84,6 +84,18 @@ main_loop:
   beq reset_secs
 
   jsr write_secs
+
+  ldx #255
+xloop:
+  ldy #255
+yloop:
+  dey
+  bne yloop
+
+  dex
+  bne xloop
+
+
   bra main_loop
 
 reset_secs:
@@ -201,7 +213,26 @@ write_hours_mins_secs:
   jsr write_char
   rts
 
+lcd_wait:
+  pha
+  stz DDRB       ; Port B is input
+lcd_busy:
+  lda #RW        ; Set RW bit
+  sta PORTA
+  lda #(RW | E)  ; Set Enable to send instruction
+  sta PORTA
+  lda PORTB      ; Read the result from the data lines
+  bmi lcd_busy   ; Branch if top bit is set
+
+  lda #RW        ; Clear Enable bit
+  sta PORTA
+  lda #%11111111 ; Port B is output
+  sta DDRB
+  pla
+  rts
+
 lcd_instruction:
+  jsr lcd_wait
   sta PORTB
   stz PORTA         ; Clear RS/RW/E bits
   lda #E            ; Set E bit to send instruction
@@ -210,6 +241,7 @@ lcd_instruction:
   rts
 
 write_char:
+  jsr lcd_wait
   sta PORTB
   lda #RS         ; Set RS; Clear RW/E bits
   sta PORTA
