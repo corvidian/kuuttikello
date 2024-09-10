@@ -288,18 +288,24 @@ draw_hymykuutti:
   ldx #0
 :
   lda hymykuutti_string1,x
+  beq hymykuutti_toinen_rivi
   jsr write_char
-  bne :-
+  inx
+  bra :-
 
+hymykuutti_toinen_rivi:
   lda #KUUT_POS_2
   jsr lcd_instruction
 
   ldx #0
 :
   lda hymykuutti_string2,x
+  beq hymykuutti_draw_font
   jsr write_char
-  bne :-
+  inx
+  bra :-
 
+hymykuutti_draw_font:
   lda #%01000000 ; Set LCD address to start of CGRAM (first custom character)
   jsr lcd_instruction
 
@@ -320,18 +326,24 @@ draw_unikuutti:
   ldx #0
 :
   lda unikuutti_string1,x
+  beq unikuutti_toinen_rivi
   jsr write_char
-  bne :-
+  inx
+  bra :-
 
+unikuutti_toinen_rivi:
   lda #KUUT_POS_2
   jsr lcd_instruction
 
   ldx #0
 :
   lda unikuutti_string2,x
+  beq unikuutti_draw_font
   jsr write_char
-  bne :-
+  inx
+  bra :-
 
+unikuutti_draw_font:
   lda #%01000000 ; Set LCD address to start of CGRAM (first custom character)
   jsr lcd_instruction
 
@@ -436,7 +448,7 @@ peruskuutti:
   .byte %11001
   .byte %01110
 
-hymykuutti_string1: .byte $a1, $eb, 08, 09, 10, 11, $eb, $a1, 0
+hymykuutti_string1: .byte $a1, $eb,  8,  9, 10, 11, $eb, $a1, 0
 hymykuutti_string2: .byte " ", " ", 12, 13, 14, 15, " ", " ", 0
 
 hymykuutti:
@@ -512,7 +524,7 @@ hymykuutti:
   .byte %11001
   .byte %01110
 
-unikuutti_string1: .byte 08, 09, 10, 11, "Z", "z", "Z", "z", 0
+unikuutti_string1: .byte  8,  9, 10, 11, "Z", "z", "Z", "z", 0
 unikuutti_string2: .byte 12, 13, 14, 15, " ", " ", " ", " ", 0
 
 unikuutti:
