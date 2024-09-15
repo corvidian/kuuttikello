@@ -59,18 +59,22 @@ irq:
   bit T1CL
   inc ticks
   lda #%00000010
+  eor PORTA
   sta PORTA
   bne end_irq
   inc ticks + 1
   lda #%00000100
+  eor PORTA
   sta PORTA
   bne end_irq
   inc ticks + 2
   lda #%00001000
+  eor PORTA
   sta PORTA
   bne end_irq
   inc ticks + 3
   lda #%00010000
+  eor PORTA
   sta PORTA
 end_irq:
   pla
