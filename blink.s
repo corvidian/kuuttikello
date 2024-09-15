@@ -18,8 +18,12 @@ toggle_time = $04  ; 1 byte
 reset:
   lda #$ff
   sta DDRA
-  lda #$FF
+  lda #0
   sta PORTA
+  lda #%00001010
+  eor PORTA
+  sta PORTA
+  lda #0
   sta toggle_time
   jsr init_timer
 
