@@ -49,9 +49,9 @@ init_timer:
   sta ticks + 3
   lda #%01000000
   sta ACR
-  lda #$0e
+  lda #$ff
   sta T1CL
-  lda #$27
+  lda #$ff
   sta T1CH
   lda %11000000
   sta IER
