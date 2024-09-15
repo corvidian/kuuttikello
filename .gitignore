@@ -1,4 +1,6 @@
 vasm/
 *.out
 *.bin
+
 .idea/
+*.iml
