@@ -67,8 +67,6 @@ print:
 loop:
   jmp loop
 
-message: .asciiz "Hello, world!"
-
 lcd_wait:
   pha
   stz DDRB                        ; Port B is input
