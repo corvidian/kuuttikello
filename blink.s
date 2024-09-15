@@ -18,7 +18,7 @@ toggle_time = $04  ; 1 byte
 reset:
   lda #$ff
   sta DDRA
-  lda #0
+  lda #$FF
   sta PORTA
   sta toggle_time
   jsr init_timer
@@ -55,15 +55,25 @@ init_timer:
   rts
 
 irq:
+  pha
   bit T1CL
   inc ticks
+  lda #%00000010
+  sta PORTA
   bne end_irq
   inc ticks + 1
+  lda #%00000100
+  sta PORTA
   bne end_irq
   inc ticks + 2
+  lda #%00001000
+  sta PORTA
   bne end_irq
   inc ticks + 3
+  lda #%00010000
+  sta PORTA
 end_irq:
+  pla
   rti
 
   .org $fffc
