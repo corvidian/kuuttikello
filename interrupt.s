@@ -113,6 +113,9 @@ hex_low:
   and hex_temp
   tay
   lda hexes,y
+  pha
+  jsr write_char
+  pla
   rts
 
 hex_high:
@@ -125,6 +128,9 @@ hex_high:
   ror
   tay
   lda hexes,y
+  pha
+  jsr write_char
+  pla
   rts
 
 hexes:
