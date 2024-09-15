@@ -1,11 +1,11 @@
-PORTB = $6000
-PORTA = $6001
-DDRB = $6002
-DDRA = $6003
-
-E  = %10000000
-RW = %01000000
-;RS = %00100000
+PORTB = $6000 ; Data for port B
+PORTA = $6001 ; Data for port A
+DDRB  = $6002 ; Data direction register for port B
+DDRA  = $6003 ; Data direction register for port A
+T1CL  = $6004 ; Timer 1 counter low
+T1CH  = $6005 ; Timer 1 counter high
+ACR   = $600B ; Auxiliary control register
+IFR   = $600D ; Interrupt flag register
 
   .org $8000
 
@@ -14,6 +14,7 @@ reset:
   sta DDRA
   lda #0
   sta PORTA
+  sta ACR
   
 loop:
   inc PORTA
@@ -23,15 +24,14 @@ loop:
   jmp loop
 
 delay:
-  ldy #$ff
-delay2:
-  ldx #$ff
+  lda #$50
+  sta T1CL
+  lda #$c3
+  sta T1CH
 delay1:
-  nop
-  dex
-  bne delay1
-  dey
-  bne delay2
+  bit IFR
+  bvc delay1
+  lda T1CL
   rts
 
   .org $fffc
