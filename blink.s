@@ -10,7 +10,7 @@ IFR   = $600D ; Interrupt flag register
 IER   = $600E ; Interrupt enable register
 
 ; RAM addresses
-ticks = $00   ; timer ticks, 4 bytes up to $03
+ticks       = $00  ; timer ticks, 4 bytes up to $03
 toggle_time = $04  ; 1 byte
 
   .org $8000
@@ -20,6 +20,7 @@ reset:
   sta DDRA
   lda #0
   sta PORTA
+  sta toggle_time
   jsr init_timer
 
 loop:
@@ -31,16 +32,17 @@ loop:
 
   lda #$01
   eor PORTA
-  STA PORTA
+  sta PORTA
   lda ticks
   sta toggle_time
   jmp loop
 
 init_timer:
-  stz ticks
-  stz ticks + 1
-  stz ticks + 2
-  stz ticks + 3
+  lda #0
+  sta ticks
+  sta ticks + 1
+  sta ticks + 2
+  sta ticks + 3
   lda #%01000000
   sta ACR
   lda #$0e
