@@ -31,7 +31,7 @@ loop:
   sec
   lda ticks
   sbc toggle_time
-  cmp #25
+  cmp #100
   bcc loop
 
   lda #$01
@@ -49,9 +49,9 @@ init_timer:
   sta ticks + 3
   lda #%01000000
   sta ACR
-  lda #$ff
+  lda #$0e
   sta T1CL
-  lda #$ff
+  lda #$27
   sta T1CH
   lda #%11000000
   sta IER
