@@ -146,26 +146,29 @@ hexes:
 
 nmi:
 irq:
-  phx
-  phy
-
   inc counter
   bne exit_irq
   inc counter + 1
 exit_irq:
-  ldy #$ff
-  ldx #$ff
-delay:
-  dex
-  bne delay
-  dey
-  bne delay
+  jsr debounce_delay
+  bit PORTA  ; Clear interrupt from VIA
+  rti
 
-  bit PORTA
+debounce_delay:
+  phx
+  phy
+
+  ldy #$80
+  ldx #$FF
+:
+  dex
+  bne :-
+  dey
+  bne :-
 
   ply
   plx
-  rti
+  rts
 
   .org $fffa
   .word nmi
