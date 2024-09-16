@@ -53,7 +53,7 @@ init_timer:
   sta T1CL
   lda #$ff
   sta T1CH
-  lda %11000000
+  lda #%11000000
   sta IER
   cli
   rts
@@ -65,16 +65,19 @@ irq:
   lda #%00000010
   eor PORTA
   sta PORTA
+  lda ticks
   bne end_irq
   inc ticks + 1
   lda #%00000100
   eor PORTA
   sta PORTA
+  lda ticks + 1
   bne end_irq
   inc ticks + 2
   lda #%00001000
   eor PORTA
   sta PORTA
+  lda ticks + 2
   bne end_irq
   inc ticks + 3
   lda #%00010000
