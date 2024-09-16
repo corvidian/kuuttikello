@@ -31,7 +31,7 @@ LCD_E  = %10000000
 LCD_RW = %01000000
 LCD_RS = %00100000
 
-.org $8000
+    .org $8000
 
 reset:
     jsr lcd_init
@@ -632,6 +632,6 @@ kaanteiskuutti:
     .byte %11001
     .byte %11111
 
-.org $fffc
-.word reset
-.word irq
+    .org $fffc
+    .word reset
+    .word irq
