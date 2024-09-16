@@ -1,12 +1,18 @@
+; I/O addresses
 PORTB = $6000
 PORTA = $6001
 DDRB = $6002
 DDRA = $6003
+PCR   = $600C  ; Peripheral control register
+IFR   = $600D ; Interrupt flag register
+IER   = $600E ; Interrupt enable register
 
+; Flag values
 LCD_E  = %10000000
 LCD_RW = %01000000
-RS = %00100000
+LCD_RS = %00100000
 
+; RAM addresses
 message = $0204                     ; 5 bytes?
 counter = $020a                     ; 2 bytes
 
@@ -17,6 +23,11 @@ reset:
   ldx #$ff
   txs
   cli
+
+  lda #$82
+  sta IER
+  lda #$00
+  sta PCR
 
   lda #%11111111                  ; Set all pins on port B to output
   sta DDRB
@@ -102,11 +113,11 @@ lcd_instruction:
 write_char:
   jsr lcd_wait
   sta PORTB
-  lda #RS                         ; Set RS; Clear RW/E bits
+  lda #LCD_RS                         ; Set RS; Clear RW/E bits
   sta PORTA
-  lda #(RS | LCD_E)               ; Set E bit to send instruction
+  lda #(LCD_RS | LCD_E)               ; Set E bit to send instruction
   sta PORTA
-  lda #RS                         ; Clear E bits
+  lda #LCD_RS                         ; Clear E bits
   sta PORTA
   rts
 
@@ -135,10 +146,25 @@ hexes:
 
 nmi:
 irq:
+  phx
+  phy
+
   inc counter
   bne exit_irq
   inc counter + 1
 exit_irq:
+  ldy #$ff
+  ldx #$ff
+delay:
+  dex
+  bne delay
+  dey
+  bne delay
+
+  bit PORTA
+
+  ply
+  plx
   rti
 
   .org $fffa
