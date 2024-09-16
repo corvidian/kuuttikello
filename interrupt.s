@@ -42,10 +42,8 @@ reset:
   stz message + 3
   stz message + 4
 
-  lda #$c3
-  sta counter
-  lda #$4f
-  sta counter + 1
+  stz counter
+  stz counter + 1
 
 loop:
   lda #%00000010  ; Reset cursor to home
@@ -118,9 +116,6 @@ hex_low:
   and hex_temp
   tay
   lda hexes,y
-  pha
-  jsr write_char
-  pla
   rts
 
 hex_high:
@@ -133,17 +128,12 @@ hex_high:
   ror
   tay
   lda hexes,y
-  pha
-  jsr write_char
-  pla
   rts
 
 hexes:
   .asciiz "0123456789ABCDEF"
 
 nmi:
-  rti
-
 irq:
   inc counter
   bne exit_irq
