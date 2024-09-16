@@ -38,9 +38,9 @@ reset:
   stz message + 3
   stz message + 4
 
-  lda $c3
+  lda #$c3
   sta counter
-  lda $4f
+  lda #$4f
   sta counter + 1
 
   lda counter + 1
