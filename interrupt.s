@@ -7,13 +7,17 @@ LCD_E  = %10000000
 LCD_RW = %01000000
 RS = %00100000
 
+message = $0204                     ; 5 bytes?
 counter = $020a                     ; 2 bytes
-message = $0210                     ; 5 bytes?
 
 hex_temp = $f0
 
   .org $8000
 reset:
+  ldx #$ff
+  txs
+  cli
+
   lda #%11111111                  ; Set all pins on port B to output
   sta DDRB
 
@@ -43,7 +47,11 @@ reset:
   lda #$4f
   sta counter + 1
 
-  lda counter + 1
+loop:
+  lda #%00000010  ; Reset cursor to home
+  jsr lcd_instruction
+
+  lda counter + 1 ; Read hexes from counter to message
   jsr hex_high
   sta message
   lda counter + 1
@@ -64,7 +72,6 @@ print:
   inx
   jmp print
 
-loop:
   jmp loop
 
 lcd_wait:
