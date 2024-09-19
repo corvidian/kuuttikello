@@ -40,12 +40,9 @@ reset:
     stz kuutti
 
     stz hundredths
-    lda #19
-    sta secs
-    lda #59
-    sta mins
-    lda #23
-    sta hours
+    stz secs
+    stz mins
+    stz hours
  
     jsr write_hours_mins_secs
     jsr draw_hymykuutti
