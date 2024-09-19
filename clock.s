@@ -57,7 +57,7 @@ main_loop:
     jsr check_secs
 
     jsr write_hours_mins_secs
-;    jsr choose_kuutti
+    jsr choose_kuutti
 
     bra main_loop
 
@@ -367,8 +367,6 @@ minute_button:
     jsr inc_mins
 
 end_button_irq:
-    bit PORTA                   ; Clear interrupt from VIA
-
 debounce_delay:
     ldy #$80
     ldx #$FF
@@ -377,6 +375,8 @@ debounce_delay:
     bne :-
     dey
     bne :-
+
+    bit PORTA                   ; Clear interrupt from VIA
 
     bra exit_irq
 
