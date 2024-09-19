@@ -56,7 +56,7 @@ main_loop:
     jsr check_secs
 
     jsr write_hours_mins_secs
-    jsr choose_kuutti
+;    jsr choose_kuutti
 
     bra main_loop
 
@@ -350,10 +350,9 @@ irq:
     bvs timer_irq
     pha
     lda IFR
-    sta irq_temp
-    ror irq_temp
+    ror A
     bcs minute_button
-    ror irq_temp
+    ror A
     bcs hour_button
     rti
 
@@ -365,8 +364,8 @@ minute_button:
     jsr inc_mins
 
 end_button_irq:
-    jsr debounce_delay
     bit PORTA                   ; Clear interrupt from VIA
+    jsr debounce_delay
     pla
     rti
 
