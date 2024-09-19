@@ -42,7 +42,8 @@ reset:
     jsr init_buttons
     cli
 
-    stz kuutti
+    lda #$FF
+    sta kuutti
 
     stz hundredths
     stz secs
@@ -346,15 +347,17 @@ init_buttons:
     rts
 
 irq:
+    pha
+    phx
+    phy
     bit IFR
     bvs timer_irq
-    pha
     lda IFR
     ror A
     bcs minute_button
     ror A
     bcs hour_button
-    rti
+    jmp exit_irq
 
 hour_button:
     jsr inc_hours
@@ -365,19 +368,8 @@ minute_button:
 
 end_button_irq:
     bit PORTA                   ; Clear interrupt from VIA
-    jsr debounce_delay
-    pla
-    rti
-
-timer_irq:
-    bit T1CL                    ; Clear interrupt from VIA
-    inc hundredths
-    rti
 
 debounce_delay:
-    phx
-    phy
-
     ldy #$80
     ldx #$FF
 :
@@ -386,9 +378,17 @@ debounce_delay:
     dey
     bne :-
 
+    bra exit_irq
+
+timer_irq:
+    bit T1CL                    ; Clear interrupt from VIA
+    inc hundredths
+
+exit_irq:
     ply
     plx
-    rts
+    pla
+    rti
 
 nmi:
     stz hundredths
