@@ -315,7 +315,7 @@ init_timer:
     rts
 
 init_buttons:
-    lda #%10000010
+    lda #%10000011
     sta IER
     stz PCR
     rts
