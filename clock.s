@@ -56,6 +56,7 @@ main_loop:
     jsr check_secs
 
     jsr write_hours_mins_secs
+    jsr choose_kuutti
 
     bra main_loop
 
@@ -226,6 +227,17 @@ draw_kaanteiskuutti:
 
     rts
 
+choose_kuutti:
+    lda hours
+    cmp #23
+    bcs choose_unikuutti
+    cmp #8
+    bcc choose_unikuutti
+    jmp draw_hymykuutti
+
+choose_unikuutti:
+    jmp draw_unikuutti
+
 draw_hymykuutti:
     lda #KUUT_POS_1
     jsr lcd_instruction
@@ -251,6 +263,9 @@ hymykuutti_toinen_rivi:
     bra :-
 
 hymykuutti_draw_font:
+    bit kuutti
+    bpl exit_hymykuutti
+
     lda #%01000000                  ; Set LCD address to start of CGRAM (first custom character)
     jsr lcd_instruction
 
@@ -262,6 +277,9 @@ hymykuutti_draw_font:
     cpx #64
     bne :-
 
+    smb7 kuutti
+
+exit_hymykuutti:
     rts
 
 draw_unikuutti:
@@ -289,6 +307,9 @@ unikuutti_toinen_rivi:
     bra :-
 
 unikuutti_draw_font:
+    bit kuutti
+    bmi exit_unikuutti
+
     lda #%01000000                  ; Set LCD address to start of CGRAM (first custom character)
     jsr lcd_instruction
 
@@ -300,6 +321,9 @@ unikuutti_draw_font:
     cpx #64
     bne :-
 
+    rmb7 kuutti
+
+exit_unikuutti:
     rts
 
 init_timer:
@@ -326,11 +350,10 @@ irq:
     pha
     lda IFR
     sta irq_temp
-    pla
-    ror irq_temp
-    bcs hour_button
     ror irq_temp
     bcs minute_button
+    ror irq_temp
+    bcs hour_button
     rti
 
 hour_button:
@@ -343,6 +366,7 @@ minute_button:
 end_button_irq:
     jsr debounce_delay
     bit PORTA                   ; Clear interrupt from VIA
+    pla
     rti
 
 timer_irq:
