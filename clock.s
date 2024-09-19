@@ -1,11 +1,12 @@
 ; I/O osoitteita
-PORTB = $6000
-PORTA = $6001
-DDRB = $6002
-DDRA = $6003
+PORTB = $6000                       ; Data for port B
+PORTA = $6001                       ; Data for port A
+DDRB  = $6002                       ; Data direction register for port B
+DDRA  = $6003                       ; Data direction register for port A
 T1CL  = $6004                       ; Timer 1 counter low
 T1CH  = $6005                       ; Timer 1 counter high
 ACR   = $600B                       ; Auxiliary control register
+PCR   = $600C                       ; Peripheral control register
 IFR   = $600D                       ; Interrupt flag register
 IER   = $600E                       ; Interrupt enable register
 
@@ -16,6 +17,8 @@ mins = $12
 hours = $13
 
 kuutti = $20                        ; 0 = perus, 1 = uni
+
+irq_temp = $30
 
 ; Arvoja
 SEC_POS = $86
@@ -36,6 +39,8 @@ LCD_RS = %00100000
 reset:
     jsr lcd_init
     jsr init_timer
+    jsr init_buttons
+    cli
 
     stz kuutti
 
@@ -74,6 +79,7 @@ inc_secs:
 
 reset_secs:
     stz secs
+inc_mins:
     inc mins
     lda mins
     cmp #60
@@ -81,6 +87,7 @@ reset_secs:
 
 reset_mins:
     stz mins
+inc_hours:
     inc hours
     lda hours
     cmp #24
@@ -296,8 +303,7 @@ unikuutti_draw_font:
     rts
 
 init_timer:
-    lda #0
-    sta hundredths
+    stz hundredths
     lda #%01000000
     sta ACR
     lda #$0e
@@ -306,12 +312,63 @@ init_timer:
     sta T1CH
     lda #%11000000
     sta IER
-    cli
+    rts
+
+init_buttons:
+    lda #%10000010
+    sta IER
+    stz PCR
     rts
 
 irq:
-    bit T1CL
+    bit IFR
+    bvs timer_irq
+    pha
+    lda IFR
+    sta irq_temp
+    pla
+    ror irq_temp
+    bcs hour_button
+    ror irq_temp
+    bcs minute_button
+    rti
+
+hour_button:
+    jsr inc_hours
+    bra end_button_irq
+
+minute_button:
+    jsr inc_mins
+
+end_button_irq:
+    jsr debounce_delay
+    bit PORTA                   ; Clear interrupt from VIA
+    rti
+
+timer_irq:
+    bit T1CL                    ; Clear interrupt from VIA
     inc hundredths
+    rti
+
+debounce_delay:
+    phx
+    phy
+
+    ldy #$80
+    ldx #$FF
+:
+    dex                         ; Sets X to $FF when 0 after decreasing Y
+    bne :-
+    dey
+    bne :-
+
+    ply
+    plx
+    rts
+
+nmi:
+    stz hundredths
+    stz secs
     rti
 
 numbers:
@@ -332,303 +389,304 @@ numbers:
     .byte "F0","F1","F2","F3","F4","F5","F6","F7","F8","F9"
 
 peruskuutti:
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %00001
-    .byte %00011
-    .byte %00110
-    .byte %00100
-    .byte %01000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000001
+    .byte %00000011
+    .byte %00000110
+    .byte %00000100
+    .byte %00001000
 
-    .byte %00000
-    .byte %00000
-    .byte %11111
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %01000
-    .byte %00000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00001000
+    .byte %00000000
 
-    .byte %00000
-    .byte %00000
-    .byte %11111
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %00010
-    .byte %00000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000010
+    .byte %00000000
 
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %10000
-    .byte %11000
-    .byte %01100
-    .byte %00100
-    .byte %00010
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00010000
+    .byte %00011000
+    .byte %00001100
+    .byte %00000100
+    .byte %00000010
 
-    .byte %01000
-    .byte %01011
-    .byte %01000
-    .byte %01011
-    .byte %11000
-    .byte %10100
-    .byte %10011
-    .byte %01110
+    .byte %00001000
+    .byte %00001011
+    .byte %00001000
+    .byte %00001011
+    .byte %00011000
+    .byte %00010100
+    .byte %00010011
+    .byte %00001110
 
-    .byte %01100
-    .byte %01100
-    .byte %00001
-    .byte %00101
-    .byte %00011
-    .byte %00000
-    .byte %00000
-    .byte %11111
+    .byte %00001100
+    .byte %00001100
+    .byte %00000001
+    .byte %00000101
+    .byte %00000011
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
 
-    .byte %00110
-    .byte %00110
-    .byte %10000
-    .byte %10100
-    .byte %11000
-    .byte %00000
-    .byte %00000
-    .byte %11111
+    .byte %00000110
+    .byte %00000110
+    .byte %00010000
+    .byte %00010100
+    .byte %00011000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
 
-    .byte %00010
-    .byte %11010
-    .byte %00010
-    .byte %11010
-    .byte %00011
-    .byte %00101
-    .byte %11001
-    .byte %01110
+    .byte %00000010
+    .byte %00011010
+    .byte %00000010
+    .byte %00011010
+    .byte %00000011
+    .byte %00000101
+    .byte %00011001
+    .byte %00001110
 
 hymykuutti_string1: .byte $a1, $eb,  8,  9, 10, 11, $eb, $a1, 0
 hymykuutti_string2: .byte " ", " ", 12, 13, 14, 15, " ", " ", 0
 
 hymykuutti:
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %00001
-    .byte %00011
-    .byte %00110
-    .byte %00100
-    .byte %01000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000001
+    .byte %00000011
+    .byte %00000110
+    .byte %00000100
+    .byte %00001000
 
-    .byte %00000
-    .byte %00000
-    .byte %11111
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %01000
-    .byte %00000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00001000
+    .byte %00000000
 
-    .byte %00000
-    .byte %00000
-    .byte %11111
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %00010
-    .byte %00000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000010
+    .byte %00000000
 
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %10000
-    .byte %11000
-    .byte %01100
-    .byte %00100
-    .byte %00010
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00010000
+    .byte %00011000
+    .byte %00001100
+    .byte %00000100
+    .byte %00000010
 
-    .byte %01000
-    .byte %01011
-    .byte %01000
-    .byte %01011
-    .byte %11000
-    .byte %10100
-    .byte %10011
-    .byte %01110
+    .byte %00001000
+    .byte %00001011
+    .byte %00001000
+    .byte %00001011
+    .byte %00011000
+    .byte %00010100
+    .byte %00010011
+    .byte %00001110
 
-    .byte %01000
-    .byte %10100
-    .byte %00001
-    .byte %00101
-    .byte %00011
-    .byte %00000
-    .byte %00000
-    .byte %11111
+    .byte %00001000
+    .byte %00010100
+    .byte %00000001
+    .byte %00000101
+    .byte %00000011
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
 
-    .byte %00010
-    .byte %00101
-    .byte %10000
-    .byte %10100
-    .byte %11000
-    .byte %00000
-    .byte %00000
-    .byte %11111
+    .byte %00000010
+    .byte %00000101
+    .byte %00010000
+    .byte %00010100
+    .byte %00011000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
 
-    .byte %00010
-    .byte %11010
-    .byte %00010
-    .byte %11010
-    .byte %00011
-    .byte %00101
-    .byte %11001
-    .byte %01110
+    .byte %00000010
+    .byte %00011010
+    .byte %00000010
+    .byte %00011010
+    .byte %00000011
+    .byte %00000101
+    .byte %00011001
+    .byte %00001110
 
 unikuutti_string1: .byte  8,  9, 10, 11, "Z", "z", "Z", "z", 0
 unikuutti_string2: .byte 12, 13, 14, 15, " ", " ", " ", " ", 0
 
 unikuutti:
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %00001
-    .byte %00011
-    .byte %00110
-    .byte %00100
-    .byte %01000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000001
+    .byte %00000011
+    .byte %00000110
+    .byte %00000100
+    .byte %00001000
 
-    .byte %00000
-    .byte %00000
-    .byte %11111
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %01000
-    .byte %00000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00001000
+    .byte %00000000
 
-    .byte %00000
-    .byte %00000
-    .byte %11111
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %00010
-    .byte %00000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000010
+    .byte %00000000
 
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %10000
-    .byte %11000
-    .byte %01100
-    .byte %00100
-    .byte %00010
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00010000
+    .byte %00011000
+    .byte %00001100
+    .byte %00000100
+    .byte %00000010
 
-    .byte %01000
-    .byte %01011
-    .byte %01000
-    .byte %01011
-    .byte %11000
-    .byte %10100
-    .byte %10011
-    .byte %01110
+    .byte %00001000
+    .byte %00001011
+    .byte %00001000
+    .byte %00001011
+    .byte %00011000
+    .byte %00010100
+    .byte %00010011
+    .byte %00001110
 
-    .byte %00000
-    .byte %01100
-    .byte %00001
-    .byte %00101
-    .byte %00011
-    .byte %00000
-    .byte %00000
-    .byte %11111
+    .byte %00000000
+    .byte %00001100
+    .byte %00000001
+    .byte %00000101
+    .byte %00000011
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
 
-    .byte %00000
-    .byte %00110
-    .byte %10000
-    .byte %10100
-    .byte %11000
-    .byte %00000
-    .byte %00000
-    .byte %11111
+    .byte %00000000
+    .byte %00000110
+    .byte %00010000
+    .byte %00010100
+    .byte %00011000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
 
-    .byte %00010
-    .byte %11010
-    .byte %00010
-    .byte %11010
-    .byte %00011
-    .byte %00101
-    .byte %11001
-    .byte %01110
+    .byte %00000010
+    .byte %00011010
+    .byte %00000010
+    .byte %00011010
+    .byte %00000011
+    .byte %00000101
+    .byte %00011001
+    .byte %00001110
 
 kaanteiskuutti:
-    .byte %11111
-    .byte %11111
-    .byte %11111
-    .byte %11111
-    .byte %11110
-    .byte %11100
-    .byte %11100
-    .byte %11000
+    .byte %00011111
+    .byte %00011111
+    .byte %00011111
+    .byte %00011111
+    .byte %00011110
+    .byte %00011100
+    .byte %00011100
+    .byte %00011000
 
-    .byte %11111
-    .byte %11111
-    .byte %11111
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %01000
-    .byte %00000
+    .byte %00011111
+    .byte %00011111
+    .byte %00011111
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00001000
+    .byte %00000000
 
-    .byte %11111
-    .byte %11111
-    .byte %11111
-    .byte %00000
-    .byte %00000
-    .byte %00000
-    .byte %00010
-    .byte %00000
+    .byte %00011111
+    .byte %00011111
+    .byte %00011111
+    .byte %00000000
+    .byte %00000000
+    .byte %00000000
+    .byte %00000010
+    .byte %00000000
 
-    .byte %11111
-    .byte %11111
-    .byte %11111
-    .byte %11111
-    .byte %01111
-    .byte %00111
-    .byte %00111
-    .byte %00011
+    .byte %00011111
+    .byte %00011111
+    .byte %00011111
+    .byte %00011111
+    .byte %00001111
+    .byte %00000111
+    .byte %00000111
+    .byte %00000011
 
-    .byte %11000
-    .byte %11011
-    .byte %11000
-    .byte %11011
-    .byte %11000
-    .byte %00100
-    .byte %00011
-    .byte %10011
+    .byte %00011000
+    .byte %00011011
+    .byte %00011000
+    .byte %00011011
+    .byte %00011000
+    .byte %00000100
+    .byte %00000011
+    .byte %00010011
 
-    .byte %01100
-    .byte %01100
-    .byte %00001
-    .byte %00101
-    .byte %00011
-    .byte %00000
-    .byte %00000
-    .byte %11111
+    .byte %00001100
+    .byte %00001100
+    .byte %00000001
+    .byte %00000101
+    .byte %00000011
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
 
-    .byte %00110
-    .byte %00110
-    .byte %10000
-    .byte %10100
-    .byte %11000
-    .byte %00000
-    .byte %00000
-    .byte %11111
+    .byte %00000110
+    .byte %00000110
+    .byte %00010000
+    .byte %00010100
+    .byte %00011000
+    .byte %00000000
+    .byte %00000000
+    .byte %00011111
 
-    .byte %00011
-    .byte %11011
-    .byte %00011
-    .byte %11011
-    .byte %00011
-    .byte %00101
-    .byte %11001
-    .byte %11111
+    .byte %00000011
+    .byte %00011011
+    .byte %00000011
+    .byte %00011011
+    .byte %00000011
+    .byte %00000101
+    .byte %00011001
+    .byte %00011111
 
-    .org $fffc
+    .org $fffa
+    .word nmi
     .word reset
     .word irq
