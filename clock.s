@@ -278,8 +278,7 @@ hymykuutti_draw_font:
     cpx #64
     bne :-
 
-    lda #$FF
-    sta kuutti
+    stz kuutti
 
 exit_hymykuutti:
     rts
@@ -323,7 +322,8 @@ unikuutti_draw_font:
     cpx #64
     bne :-
 
-    stz kuutti
+    lda #$ff
+    sta kuutti
 
 exit_unikuutti:
     rts
