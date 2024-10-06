@@ -77,6 +77,8 @@ timer_irq:
 
 exit_irq:
     jsr check_secs
+    bit irq_temp
+    beq main_loop
     jsr write_hours_mins_secs
     jsr choose_kuutti
     jmp main_loop
@@ -100,10 +102,12 @@ end_button_irq:
 
     bit PORTA                   ; Clear interrupt from VIA
 
+    jsr write_hours_mins_secs
+
     bra exit_irq
 
 check_secs:
-    sec
+    stz irq_temp
     lda hundredths
     cmp #100
     bcc end_check_secs
@@ -140,6 +144,8 @@ reset_hours:
     stz hours
 
 end_inc:
+    lda #1
+    sta irq_temp
     rts
 
 write_hours_mins_secs:
